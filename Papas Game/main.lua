@@ -4,18 +4,22 @@ function sleep(n)  -- seconds
   while clock() - t0 <= n do end
 end
 function love.load(arg)
+  width = love.graphics.getWidth();
   fondo=love.graphics.newImage("fondo.png");
   potf=love.graphics.newImage("potf.png");
   cont=3;
   score=0;
+  vid=1;
   sr=0;
   dt=0;
   vx=1;
   sc=0;
+  fl=false;
+  name="potf.png";
   vida={s,x,y,b,v};
   vida.s=love.graphics.newImage("heart.png");
-  delt=love.math.random(10,30);
-  vida.y=love.math.random(0,150);
+  delt=love.math.random(20,50);
+  vida.y=-60;
   vida.x=love.math.random(1-(vida.s:getWidth()/4),1400+(vida.s:getWidth()/4));
   vida.b=false;
   vida.v=false;
@@ -31,7 +35,7 @@ function love.load(arg)
   	fuego[i].v=false;
   	fuego[i].x=love.math.random(1-(fuego[i].w/4),1400+(fuego[i].w/4));
   	end
-  for i=1,4 do
+  for i=1,9 do
   	vidas[i]=love.graphics.newImage("heart.png");
   end
   h=potf:getHeight();
@@ -40,6 +44,9 @@ function love.load(arg)
   x=570;
   y=230;
   px=0;
+  r=0;
+  g=0;
+  pr=false;
   py=700-h;
   b2=false;
   col=false;
@@ -91,6 +98,11 @@ function love.draw()
   end
 end
 function love.update(dt)
+	if(love.keyboard.isDown("s"))then
+		screenshot = love.graphics.newScreenshot( );
+		screenshot:encode('png', 'cap'..os.time()..'.png');
+	end
+	mx = love.mouse.getX();
   if(love.keyboard.isDown("space"))then
     if y==230 or y==300 then
       ingame=true;
@@ -145,14 +157,15 @@ function love.update(dt)
   		love.graphics.draw(potf,px,py);
   		sleep(2);
   		love.audio.rewind(no);
-  		vida.y=love.math.random(1,150);
+  		vida.y=-60;
   		vida.x=love.math.random(1-(vida.s:getWidth()/4),1400+(vida.s:getWidth()/4));
   		vida.b=false;
   		vida.v=false;
   		ingame=false;
   		cont=3;
+  		vid=1;
   	end
-  	if(score>delt and score<delt+10)then
+  	if(score>delt*vid and score<delt*vid+10)then
   		if(700-vida.y+vida.s:getHeight()>100 and vida.b==false)then
   		vida.y=vida.y+(4.5*vx);
   		else
@@ -165,7 +178,16 @@ function love.update(dt)
   		aux=((dx-bx)^2+(dy-by)^2)^0.5;
   		if(aux<45 and vida.v==false)then
   			cont=cont+1;
-  			vida.v=true;
+  			vida.v=false;
+  			vida.b=false;
+  			vida.x=love.math.random(1-(vida.s:getWidth()/4),1400+(vida.s:getWidth()/4));
+  			vida.y=-60;
+  			vid=vid+1;
+  			r=love.timer.getTime();
+  			la=love.sound.newSoundData( "h.mp3" );
+  			ne = love.audio.newSource(la);
+  			love.audio.play(ne);
+  			love.audio.rewind(ne);
   		end
   	end
   	for i=1,12 do
@@ -188,11 +210,38 @@ function love.update(dt)
   		if(aux<45 and fuego[i].v==false)then
   			cont=cont-1;
   			fuego[i].v=true;
+  			g=love.timer.getTime();
   			o=love.sound.newSoundData( "f.mp3" );
   			no = love.audio.newSource(o);
   			love.audio.play(no);
   			love.audio.rewind(no);
   		end
+  	end
+  	if((love.timer.getTime()-g)*100<200)then
+  		if(name=="potfv.png")then
+  			potf=love.graphics.newImage("potfvd.png");
+		else
+			potf=love.graphics.newImage("potfd.png");
+  		end
+  		fl=true;
+  	else
+  		if(pr==false)then
+  			potf=love.graphics.newImage(name);
+  		end
+  		fl=false;
+  	end
+  	if((love.timer.getTime()-r)*100<200)then
+  		if(name=="potfv.png")then
+  			potf=love.graphics.newImage("potfhv.png");
+		else
+			potf=love.graphics.newImage("potfh.png");
+  		end
+  			pr=true;
+  		else
+  		if(fl==false)then
+  			potf=love.graphics.newImage(name);
+  		end
+  		pr=false;
   	end
   	if(love.keyboard.isDown("p"))then
   		love.audio.stop(music);
@@ -202,16 +251,41 @@ function love.update(dt)
   	end
     if(love.keyboard.isDown("left") and xi==false)then
       px=px-5;
-      potf=love.graphics.newImage("potfv.png");
+      if(fl==false and pr==false)then
+      	potf=love.graphics.newImage("potfv.png");
+      end
+      name="potfv.png";
     end
-    if(love.keyboard.isDown("right"))then
+    if(love.keyboard.isDown("kp4")and xi==false)then
+    	px=px-5;
+      	if(fl==false and pr==false)then
+      		potf=love.graphics.newImage("potfv.png");
+      	end
+      	name="potfv.png";
+    end
+    if(love.keyboard.isDown("kp6") and xd==false)then
+    	px=px+5;
+      	if(fl==false and pr==false)then
+      		potf=love.graphics.newImage("potf.png");
+      	end
+      	name="potf.png";
+    end
+    if(love.keyboard.isDown("right") and xd==false)then
       px=px+5;
-      potf=love.graphics.newImage("potf.png");
+      if(fl==false and pr==false)then
+      	potf=love.graphics.newImage("potf.png");
+      end
+      name="potf.png";
     end
-    if(px<1-(w/2))then
+    if(px<1)then
     	xi=true;
     else
     	xi=false;
+    end
+    if(px>(width*(12/7))-w)then
+    	xd=true;
+    else
+    	xd=false;
     end
     if(bb==false)then
     	sleep(2);
